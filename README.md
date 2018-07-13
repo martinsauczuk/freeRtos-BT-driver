@@ -1,44 +1,20 @@
-# Firmware v2
+## Driver UART v2
 Firmware v2 is a C language software development environment for embedded
 systems. At the moment it focuses specifically on the programming of 
 microcontrollers.
 
-## IMPORTANT
 
-**This environment is under construction!!**
 
-**Always use the [released versions](../../releases) because in these all examples are tested and the API documentation is consistent. The master branch may contain inconsistencies because this environment is currently under development.**
-
-## Supported targets
-- LPC11U68
-- LPC1769
-- LPC4337 (M4 and M0 cores)
-- LPC54102 (M4 and M0+ cores)
-
-## Supported boards
-- CIAA-NXP and EDU-CIAA-NXP (www.proyecto-ciaa.com.ar)
-- LPCXpresso with LPC1769
-- LPCXpresso with LPC54102
-- LPCXpresso with LPC11U68
-
-## Available libraries
+## Librerías utilizadas
 - [sAPI](https://github.com/epernia/sapi) (only for EDU-CIAA-NXP board).
-- [CMSIS](http://www.arm.com/products/processors/cortex-m/cortex-microcontroller-software-interface-standard.php). and [LPCOpen](https://www.lpcware.com/lpcopen).
-- [CMSIS-DSPLIB](http://www.keil.com/pack/doc/CMSIS/DSP/html/index.html).
-- [lwip](http://lwip.wikia.com/wiki/LwIP_Wiki).
 - [FreeRTOS](http://www.freertos.org/).
 
-## Supported toolchains
-- gcc-arm-none-eabi
+## Explicación breve
 
-## Usage
-* Make sure you have an ```arm-none-eabi-*``` toolchain configured in your ```PATH```. If you don't have it, download [GCC ARM Embedded](https://launchpad.net/gcc-arm-embedded).
-* ```git clone https://github.com/pridolfi/workspace.git && cd workspace```
-* ```cp project.mk.template project.mk```
-* Define ```PROJECT```, ```TARGET``` and ```BOARD``` (optional) variables in ```project.mk``` according to the project you want to compile.
-* Compile with ```make```.
-* Clean with ```make clean```. Clean for all targets with ```make clean_all```.
-* Download to target via OpenOCD with ```make download```.
+- Cola de Tx: El driver se encarga de enviar a la uart los datos que se encuentren en esta cola, funciona como si fuera una cola de impresión, donde la uart es la impresora que se encargará de imprimir todo lo que tenga en la cola de impresión, sin importar de quien sea. **En la cola de Tx escribe la aplicación y extrae los datos el driver**
+
+- Cola de Rx. El driver se encarga de chequear si hay dato en la uart y colocarlo en la cola de recepción, como si fuera una bandeja de mail. La aplicación cuando desea puede consultar dicha cola (ver mail no leido). Automaticamente cuando consulta dichos datos la cola se borra. Los datos son *extraídos* de la cola. **En la cola de Rx el driver solamente escribe y en la aplicación extrae.**
+
 
 ## This environment is based on
 
