@@ -1,0 +1,9 @@
+*.launch
+.project
+.cproject
+tags
+/out
+.settings
+*anjuta*
+*kdev4*
+
