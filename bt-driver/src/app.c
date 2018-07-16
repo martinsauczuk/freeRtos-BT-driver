@@ -1,14 +1,23 @@
 #include "app.h"
 
+extern xQueueHandle xQueueRx;
+
 /**
- *
+ * APP: Este módulo está dedicado a la aplicación, utiliza las funciones
+ * provistas por el drive.
+ * Para transmitir utilizar vvoid vWriteStringToQueue(char* stringPointer) y vWriteCharToQueue(char data);
+ */
+
+
+/**
+ *	Muestra menú al usuario
  */
 void vShowMenu(  ) {
 
-	vWriteStringToQueue(">Menu, seleccione la opcion\r\n" );
-	vWriteStringToQueue("Opcion 1\r\n" );
-	vWriteStringToQueue("Opcion 2\r\n" );
-	vWriteStringToQueue(">");
+	vWriteStringToQueue("** App de prueba driver uart freeRtos **\r\n" );
+	vWriteStringToQueue("Menú, seleccione una opción\r\n" );
+	vWriteStringToQueue("1 - Función de ejemplo 1\r\n" );
+	vWriteStringToQueue("2 - Función de ejemplo 2\r\n" );
 
 }
 
@@ -21,31 +30,28 @@ void vResponseMenuTask( void *pvParameters ) {
 	portBASE_TYPE xStatus;
 	const portTickType xTicksToWait = 100 / portTICK_RATE_MS;
 
-	char receivedChar;
+	char valorExtraido;
 
 	/* This task is also defined within an infinite loop. */
 	for( ;; )
 	{
-		gpioToggle(LEDG);
 		/* As this task unblocks immediately that data is written to the queue this
 			call should always find the queue empty. */
 		if( uxQueueMessagesWaiting( xQueueRx ) != 0 )
 		{
-			//			vPrintString( "Queue should have been empty!\r\n" );
+			vPrintStringDebug( "Queue should have been empty!\r\n" );
 		}
 
-		xStatus = xQueueReceive( xQueueRx, &receivedChar, xTicksToWait );
+		xStatus = xQueueReceive( xQueueRx, &valorExtraido, xTicksToWait );
 
+		// Hay dato en receivedChar
 		if( xStatus == pdPASS )
 		{
-			selectOption(receivedChar);
+			selectOption(valorExtraido);
 		}
 		else
 		{
-			/* We did not receive anything from the queue even after waiting for 100ms.
-				This must be an error as the sending tasks are free running and will be
-				continuously writing to the queue. */
-			//			vPrintString( "Could not receive from the queue.\r\n" );
+			vPrintStringDebug( "Could not receive from the queue.\r\n" );
 		}
 		taskYIELD();
 	}
@@ -90,7 +96,7 @@ void opcion2() {
  *
  */
 void opcionDefault() {
-	vWriteStringToQueue("incorrecta\r\n" );
+	vWriteStringToQueue("opcion incorrecta\r\n" );
 	vShowMenu();
 }
 

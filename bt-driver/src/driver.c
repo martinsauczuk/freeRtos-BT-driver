@@ -1,49 +1,56 @@
 #include "driver.h"
 
+extern xQueueHandle xQueueTx;
+extern xQueueHandle xQueueRx;
+
 /**
- *	Transmite a la UART el contenido de la cola, si tiene contenido
+ *	Transmite a la UART el contenido de la cola, si tiene contenido-
+ *	Tare consumidora de la cola de Tx
  */
 void vDriverTxTask( void *pvParameters ) {
 
-	char lReceivedValue;
+	char valorParaTransmitir;
 	portBASE_TYPE xStatus;
 	const portTickType xTicksToWait = 100 / portTICK_RATE_MS;
 
-	/* This task is also defined within an infinite loop. */
 	for( ;; )
 	{
 		/* As this task unblocks immediately that data is written to the queue this
 		call should always find the queue empty. */
 		if( uxQueueMessagesWaiting( xQueueTx ) != 0 )
 		{
-//			vPrintString( "Queue should have been empty!\r\n" );
+			vPrintStringDebug( "Queue should have been empty!\r\n" );
 		}
 
-		xStatus = xQueueReceive( xQueueTx, &lReceivedValue, xTicksToWait );
+		xStatus = xQueueReceive( xQueueTx, &valorParaTransmitir, xTicksToWait );
 
+		//dato a transmitir obtenido Ok desde la cola
 		if( xStatus == pdPASS )
 		{
-			/* Data was successfully received from the queue, print out the received
-			value. */
-			//			vPrintStringAndNumber( "Received = ", lReceivedValue );
-			uartWriteByte( UART_CONF, lReceivedValue);
+			// led indicador en ON
+			gpioWrite(LED_TX, TRUE);
+
+			// Transmision a la UART, siempre es por byte
+			uartWriteByte( UART_CONF, valorParaTransmitir);
 		}
 		else
 		{
-			/* We did not receive anything from the queue even after waiting for 100ms.
-			This must be an error as the sending tasks are free running and will be
-			continuously writing to the queue. */
-//			vPrintString( "Could not receive from the queue.\r\n" );
+			// led indicador en ON
+			gpioWrite(LED_TX, FALSE);
+			vPrintStringDebug( "No se obtuvo ningun dato de la cola Tx\r\n" );
 		}
 	}
 }
 
 /**
- *
+ *	Verifica si hay un dato en la UART y lo carga en la cola de Rx
+ *	Productora de la cola de Rx
  */
 void vDriverRxTask( void *pvParameters ) {
 
+	// Status de la cola
 	portBASE_TYPE xStatus;
+
 	char data;
 
 	for( ;; )
@@ -51,29 +58,28 @@ void vDriverRxTask( void *pvParameters ) {
 
 		if( uartReadByte(UART_CONF, &data) ) {
 
+			// led indicador en ON
 			gpioWrite(LED_RX, TRUE);
 
-//			vWriteCharToQueue(data);	// echo
 			xStatus = xQueueSendToBack( xQueueRx, &data, 0 );
 
+			// Pregunto por el estado
 			if( xStatus != pdPASS )
 			{
-				/* We could not write to the queue because it was full – this must
-								be an error as the queue should never contain more than one item! */
-				vPrintString( "Could not send to the queue.\r\n" );
+				vPrintStringDebug( "Error al enviar a la cola.\r\n" );
 			}
 
-
-		} else { // No hay dato
-//			gpioWrite(LED_RX, FALSE);
-//			rxFlag = FALSE;
+		} else {
+			// led indicador en off
+			gpioWrite(LED_RX, FALSE);
 		}
 		taskYIELD();
 	}
 }
 
 /**
- * Envia string completo a la cola
+ * Envia string completo a la cola de Tx, utilizando vWriteCharToQueue
+ * Esta es la función a utilizar por la app
  */
 void vWriteStringToQueue(char* stringPointer) {
 	char i = 0;
@@ -85,7 +91,8 @@ void vWriteStringToQueue(char* stringPointer) {
 }
 
 /**
- *	Envia solamente un char a la cola
+ *	Envia solamente un char a la cola de Tx.
+ *	Función productora de la cola de Tx
  */
 void vWriteCharToQueue(char data) {
 
@@ -96,13 +103,14 @@ void vWriteCharToQueue(char data) {
 	{
 		/* We could not write to the queue because it was full – this must
 							be an error as the queue should never contain more than one item! */
-		vPrintString( "Could not send to the queue.\r\n" );
+		vPrintStringDebug( "Error al enviar a la cola Tx.\r\n" );
 	}
 }
 
 /**
- *	Imprime directamente una cadena
+ *	Imprime directamente una cadena, sin utilizar la cola
+ *	Función a utilizar solamente para debug.
  */
-void vPrintString( char * string) {
-   uartWriteString( UART_CONF, string );
+void vPrintStringDebug( char * string) {
+   uartWriteString( UART_DEBUG, string );
 }

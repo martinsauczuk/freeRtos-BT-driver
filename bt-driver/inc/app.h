@@ -12,7 +12,12 @@
 
 
 void vShowMenu( );
+void opcionDefault();
+void opcion1();
+void opcion1();
+
+
 
 void vResponseMenuTask( void *pvParameters );
 
-#endif /* BT_DRIVER_INC_APP_H_ */
+#endif

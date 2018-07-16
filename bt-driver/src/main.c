@@ -1,48 +1,57 @@
 #include "main.h"
 
+// Cola de transmisión
+xQueueHandle xQueueTx;
+
+// Cola de recepción
+xQueueHandle xQueueRx;
 
 /**
- *
+ *	Configura la placa
  */
 static void initHardware(void) {
    /* Inicializar la placa */
    boardConfig();
 
-   /* Inicializar Uart */
-   uartConfig( UART_USB, 9600 );
+   /* Inicializar Uart driver*/
+   uartConfig( UART_CONF, 9600 );
+
+   /* Inicializar Uart debug */
+   uartConfig( UART_DEBUG, 115200 );
 }
 
 /**
- *
+ *	Bucle principal
  */
 int main( void )
 {
+
 	initHardware();
 
-    /* The queue is created to hold a maximum of 5 long values. */
-
+	// Creación de las colas
     xQueueTx = xQueueCreate(TX_QUEUE_SIZE, sizeof( char ) );
     xQueueRx = xQueueCreate(RX_QUEUE_SIZE, sizeof( char ) );
+
+    // Mostrar menú por primera vez
     vShowMenu();
 
-//	if( xQueueTx != NULL )
-//	{
-//		xTaskCreate( vSenderTask, "Sender1", 240, ( void * ) 100, 1, NULL );
+    // Si por algún motivo las colas son nulas, terminar el programa
+	if( (xQueueTx != NULL ) && ( xQueueRx != NULL ) )
+	{
+		// Tareas relacionadas a la appp
 		xTaskCreate( vResponseMenuTask, "ResponseMenu", 240, ( void * ) 200, 1, NULL );
 
-//		xTaskCreate( vShowMenuTerminalTask, "menuPrincipal", 240, ( void * ) 100 , 1, NULL );
-		/* Create the task that will read from the queue.  The task is created with
-		priority 2, so above the priority of the sender tasks. */
+		// Tareas del driver
 		xTaskCreate( vDriverTxTask, "Tx", 240, ( void * ) 100, 1, NULL );
 		xTaskCreate( vDriverRxTask, "Rx", 240, ( void * ) 100, 1, NULL );
 
 		/* Start the scheduler so the created tasks start executing. */
 		vTaskStartScheduler();
-//	}
-//	else
-//	{
-		/* The queue could not be created. */
-//	}
+	}
+	else
+	{
+		/* No pueden ser creadas las colas, no puede iniciar */
+	}
 
 
 	while(1);

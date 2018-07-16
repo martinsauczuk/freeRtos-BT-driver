@@ -16,11 +16,11 @@ void vDriverRxTask( void *pvParameters );
 
 void vWriteStringToQueue(char* stringPointer);
 void vWriteCharToQueue(char data);
-void vPrintString( char * string);
+void vPrintStringDebug( char * string);
 
 void selectOption(char input);
 void opcion1(void);
 void opcion2(void);
 
 
-#endif /* BT_DRIVER_INC_DRIVER_H_ */
+#endif
